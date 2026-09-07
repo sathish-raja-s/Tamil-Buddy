@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button onclick="play()">Play Tamil</button>
+  <script>
+    function play() {
+      const text = "அம்மா";
+      const audio = new Audio("https://translate.google.com/translate_tts?ie=UTF-8&q=" + encodeURIComponent(text) + "&tl=ta&client=tw-ob");
+      audio.play().catch(e => console.error(e));
+    }
+  </script>
+</body>
+</html>

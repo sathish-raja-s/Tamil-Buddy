@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <script>
+    fetch('https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ta&q=%E0%AE%85')
+      .then(r => r.blob())
+      .then(b => console.log(b))
+      .catch(e => console.error(e));
+  </script>
+</body>
+</html>

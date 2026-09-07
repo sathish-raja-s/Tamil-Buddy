@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "UserProgress": {
+      "title": "UserProgress",
+      "description": "Tracks the user's XP, streak, completed levels, and favorite content.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The auth UID of the user." },
+        "xp": { "type": "number", "description": "Total XP earned." },
+        "streak": { "type": "number", "description": "Current day streak." },
+        "completedLevels": { "type": "array", "description": "Array of level numbers completed." },
+        "completedQuestions": { "type": "object", "description": "Map of questionId to stars earned." },
+        "completedStories": { "type": "array", "description": "Array of completed story IDs." },
+        "completedRhymes": { "type": "array", "description": "Array of completed rhyme IDs." },
+        "favoriteStories": { "type": "array", "description": "Array of favorite story IDs." },
+        "favoriteRhymes": { "type": "array", "description": "Array of favorite rhyme IDs." },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "xp", "streak"]
+    },
+    "UserAchievements": {
+      "title": "UserAchievements",
+      "description": "Tracks the user's unlocked badges.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "badges": {
+          "type": "object",
+          "description": "A map of badgeId to unlocked details"
+        },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "badges"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/data/progress": {
+      "schema": "UserProgress",
+      "description": "The user's progress data."
+    },
+    "users/{userId}/data/achievements": {
+      "schema": "UserAchievements",
+      "description": "The user's unlocked badges."
+    }
+  }
+}

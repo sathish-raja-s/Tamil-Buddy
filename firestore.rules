@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Globals
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    // Validation: UserProgress
+    function isValidUserProgress(data, userId) {
+      return data.keys().hasAll(['userId', 'xp', 'streak', 'updatedAt'])
+        && data.userId == userId
+        && data.xp is number
+        && data.streak is number
+        && data.updatedAt == request.time
+        && (!('completedLevels' in data) || data.completedLevels is list)
+        && (!('completedQuestions' in data) || data.completedQuestions is map)
+        && (!('completedStories' in data) || data.completedStories is list)
+        && (!('completedRhymes' in data) || data.completedRhymes is list)
+        && (!('favoriteStories' in data) || data.favoriteStories is list)
+        && (!('favoriteRhymes' in data) || data.favoriteRhymes is list)
+        && (!('badges' in data) || data.badges is list);
+    }
+    
+    // Validation: UserAchievements
+    function isValidUserAchievements(data, userId) {
+      return data.keys().hasAll(['userId', 'badges', 'updatedAt'])
+        && data.userId == userId
+        && data.badges is map
+        && data.updatedAt == request.time;
+    }
+    
+    // Split Collection Strategy
+    match /users/{userId} {
+      match /data/progress {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidUserProgress(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidUserProgress(incoming(), userId)
+          && incoming().userId == existing().userId; // Immutable
+        allow delete: if isOwner(userId) && isValidId(userId);
+      }
+      match /data/achievements {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidUserAchievements(incoming(), userId);
+        allow update: if isOwner(userId) && isValidId(userId) && isValidUserAchievements(incoming(), userId)
+          && incoming().userId == existing().userId; // Immutable
+        allow delete: if isOwner(userId) && isValidId(userId);
+      }
+    }
+  }
+}

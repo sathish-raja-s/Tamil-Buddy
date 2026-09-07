@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button id="btn">Play GTX</button>
+  <button id="btn2">Play SpeechSynth</button>
+  <script>
+    document.getElementById('btn').onclick = () => {
+      const text = "அம்மா";
+      const audio = new Audio("https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ta&q=" + encodeURIComponent(text));
+      audio.play().catch(e => alert(e));
+    };
+    document.getElementById('btn2').onclick = () => {
+      const u = new SpeechSynthesisUtterance("அம்மா");
+      u.lang = "ta-IN";
+      window.speechSynthesis.speak(u);
+    };
+  </script>
+</body>
+</html>
