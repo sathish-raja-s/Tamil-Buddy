@@ -5,23 +5,55 @@ import { useProgress } from '../hooks/useProgress';
 
 import { VoiceSelector } from '../components/common/VoiceSelector';
 
-const WEEKLY_DATA = [
-  { name: 'Mon', minutes: 15, score: 80 },
-  { name: 'Tue', minutes: 25, score: 95 },
-  { name: 'Wed', minutes: 20, score: 85 },
-  { name: 'Thu', minutes: 30, score: 100 },
-  { name: 'Fri', minutes: 45, score: 90 },
-  { name: 'Sat', minutes: 60, score: 100 },
-  { name: 'Sun', minutes: 0, score: 0 },
-];
-
 export function ParentDashboard() {
   const { progress } = useProgress();
+
+  const getWeeklyData = () => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const data = [];
+    const today = new Date();
+    
+    // Get last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayName = days[d.getDay()];
+      
+      data.push({
+        name: dayName,
+        minutes: progress.analytics?.learningDays?.[dateStr] || 0,
+        score: progress.analytics?.quizAttempts ? Math.round((progress.analytics.quizCorrect / progress.analytics.quizAttempts) * 100) : 0
+      });
+    }
+    return data;
+  };
+
+  const WEEKLY_DATA = getWeeklyData();
+  
+  const getWeakLetters = () => {
+    if (!progress.analytics?.weakLetters) return [];
+    return Object.entries(progress.analytics.weakLetters)
+      .filter(([_, count]) => (count as number) > 0)
+      .sort((a, b) => (b[1] as number) - (a[1] as number))
+      .slice(0, 3)
+      .map(entry => entry[0]);
+  };
+  
+  const weakLetters = getWeakLetters();
+  
+  const quizAccuracy = progress.analytics?.quizAttempts ? Math.round((progress.analytics.quizCorrect / progress.analytics.quizAttempts) * 100) : 0;
+
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8 pb-12">
       <div className="border-b pb-6">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Parent / Teacher Dashboard</h1>
+        <div className="flex justify-between items-center w-full">
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Parent / Teacher Dashboard</h1>
+          <button onClick={() => window.print()} className="bg-slate-800 text-white dark:bg-white dark:text-slate-900 px-4 py-2 rounded-xl font-bold shadow-sm hidden sm:block">
+            Generate Report 🖨️
+          </button>
+        </div>
         <p className="text-slate-500 mt-2">Monitor learning progress and activities.</p>
       </div>
 

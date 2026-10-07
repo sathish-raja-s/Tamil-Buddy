@@ -8,6 +8,7 @@ import { QUIZ_LEVELS } from '../data/levelDataGenerator';
 import { useProgress } from '../hooks/useProgress';
 import { TamilLevel, QuizQuestion } from '../types';
 import { GameEngine } from '../components/adventure/GameEngine';
+import { Assessment } from '../components/adventure/Assessment';
 import { LetterTracingCanvas } from '../components/adventure/LetterTracingCanvas';
 import { audio } from '../lib/audio';
 
@@ -24,6 +25,8 @@ export function Adventure() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [levelScore, setLevelScore] = useState(0);
+  const [preTestScore, setPreTestScore] = useState<number | null>(null);
+  const [postTestScore, setPostTestScore] = useState<number | null>(null);
 
   // Derive unlocked status (Level 1 is always unlocked. Others unlock if prev is completed)
   const isLevelUnlocked = (levelNum: number) => {
@@ -77,7 +80,7 @@ export function Adventure() {
         if (selectedLevel) {
           completeLevel(selectedLevel.level);
         }
-        setActiveView('result');
+        setActiveView('post-test');
       }
     }, 2500);
   };
@@ -210,7 +213,7 @@ export function Adventure() {
 
         <div className="flex justify-center pt-8">
           <button 
-            onClick={() => setActiveView('game')}
+            onClick={() => setActiveView('pre-test')}
             className="px-12 py-4 bg-purple-600 text-white rounded-2xl font-bold text-xl shadow-lg hover:bg-purple-700 hover:-translate-y-1 transition-all flex items-center gap-3"
           >
             Start Adventure <ArrowRight size={24} />
@@ -365,6 +368,28 @@ export function Adventure() {
     <div className="min-h-[70vh]">
       {activeView === 'map' && renderMap()}
       {activeView === 'level' && renderLevelIntro()}
+      {activeView === 'pre-test' && selectedLevel && (
+        <Assessment 
+          type="pre-test"
+          title={selectedLevel.title}
+          questions={selectedLevel.questions.slice(0, 2)}
+          onComplete={(score) => {
+            setPreTestScore(score);
+            setActiveView('game');
+          }}
+        />
+      )}
+      {activeView === 'post-test' && selectedLevel && (
+        <Assessment 
+          type="post-test"
+          title={selectedLevel.title}
+          questions={selectedLevel.questions.slice(-2)}
+          onComplete={(score) => {
+            setPostTestScore(score);
+            setActiveView('result');
+          }}
+        />
+      )}
       {activeView === 'game' && selectedLevel?.games[0] && (
         <GameEngine activity={selectedLevel.games[0]} onComplete={handleGameComplete} />
       )}

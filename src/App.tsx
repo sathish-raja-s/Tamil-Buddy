@@ -14,14 +14,18 @@ import { Adventure } from './pages/Adventure';
 import { Progress } from './pages/Progress';
 import { ParentDashboard } from './pages/ParentDashboard';
 import { Login } from './pages/Login';
-import { AchievementProvider } from './context/AchievementContext';
 import { AuthProvider } from './context/AuthContext';
+import { AchievementProvider } from './context/AchievementContext';
+import { NetworkProvider } from './context/NetworkContext';
+import { Validation } from './pages/Validation';
+import { PerformanceDashboard } from './pages/PerformanceDashboard';
 
 export default function App() {
   return (
     <ThemeProvider>
     <AuthProvider>
     <AchievementProvider>
+    <NetworkProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -37,9 +41,13 @@ export default function App() {
             <Route path="progress" element={<Progress />} />
             <Route path="parent" element={<ParentDashboard />} />
             <Route path="login" element={<Login />} />
+            <Route path="feedback" element={<Validation />} />
+            <Route path="validation" element={<Validation />} />
+            <Route path="performance" element={<PerformanceDashboard />} />
           </Route>
         </Routes>
       </BrowserRouter>
+    </NetworkProvider>
     </AchievementProvider>
     </AuthProvider>
     </ThemeProvider>

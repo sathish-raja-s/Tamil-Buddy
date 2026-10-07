@@ -126,3 +126,103 @@ export interface TamilRhyme {
   xpReward: number;
   illustration: string;
 }
+
+// --- ANALYTICS & ADAPTIVE LEARNING ---
+export interface LearnerAnalytics {
+  userId: string;
+  level: number;
+  xp: number;
+  streak: number;
+  vocabularyAccuracy: number;
+  readingAccuracy: number;
+  pronunciationAccuracy: number;
+  writingAccuracy: number;
+  quizAccuracy: number;
+  lessonsCompleted: number;
+  totalLearningTime: number; // in seconds
+  weakLetters: string[];
+  weakWords: string[];
+  strongTopics: string[];
+  lastActiveAt: string;
+}
+
+export interface AssessmentResult {
+  id: string;
+  date: string;
+  topic: string;
+  type: 'pre-test' | 'post-test';
+  score: number; // percentage
+  totalQuestions: number;
+  correctAnswers: number;
+  weaknessesIdentified: string[];
+}
+
+export interface LearningImpact {
+  topic: string;
+  preTestScore: number;
+  postTestScore: number;
+  improvementPercentage: number;
+  dateCompleted: string;
+}
+
+export interface UserFeedback {
+  id: string;
+  date: string;
+  learnerType: string;
+  ageGroup: string;
+  moduleTested: string;
+  usabilityScore: number;
+  engagementScore: number;
+  usefulnessScore: number;
+  satisfactionScore: number;
+  suggestions: string;
+  comments: string;
+}
+
+// --- PHASE 2 FORMAL USER VALIDATION ---
+export type ParticipantRole = 'Learner' | 'Parent' | 'Teacher';
+
+export interface ValidationTaskItem {
+  id: string;
+  title: string;
+  description: string;
+  route: string;
+  isCompleted: boolean;
+  timeSpentSec: number;
+}
+
+export interface ValidationSurveyAnswers {
+  q1_easyToUse: number;            // 1. The website was easy to use.
+  q2_engagingActivities: number;    // 2. Tamil learning activities were engaging.
+  q3_letterTracing: number;         // 3. Letter tracing was easy to understand.
+  q4_gamesEnjoyable: number;        // 4. Games were enjoyable.
+  q5_storiesRhymesUseful: number;   // 5. Stories and rhymes were useful.
+  q6_aiBuddyHelpful: number;        // 6. AI Buddy was helpful.
+  q7_audioClear: number;            // 7. Audio pronunciation was clear.
+  q8_websiteResponsive: number;     // 8. The website responded quickly.
+  q9_learningProgression: number;   // 9. The learning progression was easy to understand.
+  q10_recommendPlatform: number;    // 10. I would recommend this platform for Tamil learning.
+  likedMost: string;
+  shouldImprove: string;
+  facedTechnicalIssue: boolean;
+  technicalIssueDetails: string;
+}
+
+export interface ParticipantEvaluation {
+  id: string;
+  participantId: string; // e.g. "P01", "P02", "P03"
+  role: ParticipantRole;
+  createdAt: string;
+  tasksCompleted: string[]; // task IDs
+  totalTimeSec: number;
+  survey: ValidationSurveyAnswers;
+  scores: {
+    usability: number;
+    engagement: number;
+    aiHelpfulness: number;
+    audioQuality: number;
+    overallSatisfaction: number;
+  };
+  isDemo?: boolean;
+}
+
