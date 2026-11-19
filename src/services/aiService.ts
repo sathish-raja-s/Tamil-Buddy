@@ -1,15 +1,26 @@
 import { metricsService } from './metricsService';
 
+/**
+ * Single conversational turn exchanged between the learner and Tamil Buddy.
+ */
 export interface ChatMessage {
   id: string;
   text: string;
   sender: 'user' | 'buddy';
 }
 
+/**
+ * Normalized response returned by {@link AIService.sendMessage},
+ * capturing latency telemetry and whether a fallback or rate-limit path fired.
+ */
 export interface AIServiceResponse {
+  /** Bilingual Tamil/English reply text rendered in the chat UI. */
   text: string;
+  /** True when the reply originated from the deterministic offline rule engine or rate-limit guard. */
   isFallback: boolean;
+  /** True when the backend `/api/chat` token-bucket rate limiter returned HTTP 429. */
   isRateLimited?: boolean;
+  /** End-to-end round-trip latency in milliseconds. */
   durationMs: number;
 }
 

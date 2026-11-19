@@ -10,7 +10,11 @@ async function startServer() {
 
   app.use(express.json());
 
-  // In-Memory Rate Limiter (Token bucket / sliding window: max 10 requests per minute)
+  /**
+   * Sliding-window in-memory rate limiter for `/api/chat`.
+   * Caps each session (`X-Session-ID` header or client IP) to 10 requests per 60 seconds
+   * to prevent runaway Gemini API usage while returning child-friendly HTTP 429 payloads.
+   */
   const chatRateLimitMap = new Map<string, { count: number; resetAt: number }>();
   const CHAT_RATE_LIMIT = 10;
   const CHAT_WINDOW_MS = 60 * 1000;
@@ -38,14 +42,35 @@ async function startServer() {
     next();
   };
 
-  // Health check route
+  /**
+   * GET /api/health
+   * Diagnostic liveness probe returning server status, epoch timestamp,
+   * and current in-memory TTS audio buffer cache occupancy.
+   */
   app.get("/api/health", (_req, res) => {
     res.json({ status: "healthy", timestamp: Date.now(), cachedAudioItems: audioCache.size });
   });
 
-  // TTS Proxy Route
+  /**
+   * Server-side in-memory audio buffer cache keyed by `${speaker}_${pace}_${text}`.
+   * Prevents redundant upstream calls to Sarvam AI for frequently replayed Tamil glyphs.
+   */
   const audioCache = new Map<string, Buffer>();
 
+  /**
+   * GET /api/tts
+   * Multi-tier Tamil Text-to-Speech proxy endpoint.
+   *
+   * Query Parameters:
+   * - `q` (required): Tamil text string to synthesize.
+   * - `speaker` (optional, default `"ishita"`): Sarvam AI speaker voice ID.
+   * - `pace` (optional, default `1.0`): Speech playback speed multiplier.
+   *
+   * Resolution order:
+   * 1. Server memory cache (`X-Cache: HIT`, `audio/wav`, immutable 1-year cache header)
+   * 2. Sarvam AI Bulbul v3 neural TTS (`ta-IN`, 16kHz WAV) when `SARVAM_API_KEY` is configured
+   * 3. Google Translate TTS HTTPS stream fallback (`tl=ta`)
+   */
   app.get("/api/tts", async (req, res) => {
     const text = req.query.q as string;
     const speaker = (req.query.speaker as string) || "ishita";
@@ -115,7 +140,20 @@ async function startServer() {
     });
   });
 
-  // Gemini Chat Route with Rate Limiting and Fallback Resilience
+  /**
+   * POST /api/chat
+   * Child-safe bilingual Tamil AI Tutor endpoint protected by `chatRateLimiter`.
+   *
+   * Request Body:
+   * - `message` (string): Learner's question or Tamil phrase.
+   * - `history` (Array<{ sender: 'user' | 'buddy'; text: string }>): Prior conversation turns.
+   * - `weakLetters` (string, optional): Comma-separated glyphs the learner struggles with.
+   *
+   * Fault Tolerance:
+   * - Enforces a strict 6-second race timeout (`AI_CALL_TIMEOUT`) against `gemini-3.8-flash`.
+   * - Automatically degrades to deterministic local Tamil replies (`isFallback: true`)
+   *   if the API key is absent, rate-limited upstream, or times out.
+   */
   app.post("/api/chat", chatRateLimiter, async (req, res) => {
     try {
       const { message, history, weakLetters } = req.body;

@@ -3,9 +3,17 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
+/**
+ * Canonical learner progress document persisted to Cloud Firestore at
+ * `users/{userId}/data/progress` (when signed in) and mirrored to
+ * `localStorage['tamil_buddy_progress']` for anonymous / offline sessions.
+ */
 export interface UserProgress {
+  /** Cumulative experience points earned across quizzes, games, stories, and rhymes. */
   xp: number;
+  /** Consecutive active learning day streak. */
   streak: number;
+  /** Array of completed Adventure Map level numbers (1–100). */
   completedLevels: number[];
   completedQuestions: Record<string, number>;
   completedStories: string[];
@@ -49,6 +57,14 @@ const defaultProgress: UserProgress = {
 
 };
 
+/**
+ * React hook managing real-time synchronization of {@link UserProgress}.
+ *
+ * Persistence Strategy:
+ * - Authenticated users: Subscribes to Cloud Firestore via `onSnapshot` on
+ *   `users/{uid}/data/progress` and merges updates with `setDoc(..., { merge: true })`.
+ * - Guest / offline users: Hydrates from and writes to `localStorage['tamil_buddy_progress']`.
+ */
 export function useProgress() {
   const { user } = useAuth();
   const [progress, setProgress] = useState<UserProgress>(defaultProgress);
